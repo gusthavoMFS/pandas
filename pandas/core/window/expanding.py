@@ -942,7 +942,7 @@ class Expanding(RollingAndExpandingMixin):
         )
 
 
-class ExpandingGroupby(BaseWindowGroupby, Expanding):
+class ExpandingGroupBy(BaseWindowGroupby, Expanding):
     """
     Provide a expanding groupby implementation.
     """

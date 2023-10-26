@@ -4,7 +4,7 @@ from pandas.core.window.ewm import (
 )
 from pandas.core.window.expanding import (
     Expanding,
-    ExpandingGroupby,
+    ExpandingGroupBy,
 )
 from pandas.core.window.rolling import (
     Rolling,
@@ -14,7 +14,7 @@ from pandas.core.window.rolling import (
 
 __all__ = [
     "Expanding",
-    "ExpandingGroupby",
+    "ExpandingGroupBy",
     "ExponentialMovingWindow",
     "ExponentialMovingWindowGroupby",
     "Rolling",

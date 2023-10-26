@@ -149,7 +149,7 @@ if TYPE_CHECKING:
 
     from pandas.core.resample import Resampler
     from pandas.core.window import (
-        ExpandingGroupby,
+        ExpandingGroupBy,
         ExponentialMovingWindowGroupby,
         RollingGroupby,
     )
@@ -1415,7 +1415,7 @@ class GroupBy(BaseGroupBy[NDFrameT]):
         if self.grouper.has_dropped_na and is_transform:
             # result will have dropped rows due to nans, fill with null
             # and ensure index is ordered same as the input
-            result = self._set_result_index_ordered(result)
+            result = self._set_agg_index_ordered(result)
         return result
 
     # -----------------------------------------------------------------
@@ -1433,7 +1433,7 @@ class GroupBy(BaseGroupBy[NDFrameT]):
         if self.group_keys and not is_transform:
             if self.as_index:
                 # possible MI return case
-                group_keys = self.grouper.result_index
+                group_keys = self.grouper.agg_index
                 group_levels = self.grouper.levels
                 group_names = self.grouper.names
 
@@ -1490,10 +1490,10 @@ class GroupBy(BaseGroupBy[NDFrameT]):
         return result
 
     @final
-    def _set_result_index_ordered(
+    def _set_agg_index_ordered(
         self, result: OutputFrameOrSeries
     ) -> OutputFrameOrSeries:
-        # set the result index on the passed values object and
+        # set the agg index on the passed values object and
         # return the new object, xref 8046
 
         obj_axis = self.obj._get_axis(self.axis)
@@ -1586,7 +1586,7 @@ class GroupBy(BaseGroupBy[NDFrameT]):
             index = Index(range(self.grouper.ngroups))
 
         else:
-            index = self.grouper.result_index
+            index = self.grouper.agg_index
 
         if qs is not None:
             # We get here with len(qs) != 1 and not self.as_index
@@ -1674,7 +1674,7 @@ class GroupBy(BaseGroupBy[NDFrameT]):
         res_mgr = df._mgr.apply(
             aggregator, labels=ids, ngroups=ngroups, **aggregator_kwargs
         )
-        res_mgr.axes[1] = self.grouper.result_index
+        res_mgr.axes[1] = self.grouper.agg_index
         result = df._constructor_from_mgr(res_mgr, axes=res_mgr.axes)
 
         if data.ndim == 1:
@@ -1745,7 +1745,7 @@ class GroupBy(BaseGroupBy[NDFrameT]):
             len(df.columns),
             *args,
         )
-        index = self.grouper.result_index
+        index = self.grouper.agg_index
         if data.ndim == 1:
             result_kwargs = {"name": data.name}
             result = result.ravel()
@@ -2038,7 +2038,7 @@ class GroupBy(BaseGroupBy[NDFrameT]):
 
         # for each col, reshape to size of original frame by take operation
         ids, _, _ = self.grouper.group_info
-        result = result.reindex(self.grouper.result_index, axis=self.axis, copy=False)
+        result = result.reindex(self.grouper.agg_index, axis=self.axis, copy=False)
 
         if self.obj.ndim == 1:
             # i.e. SeriesGroupBy
@@ -2814,7 +2814,7 @@ class GroupBy(BaseGroupBy[NDFrameT]):
             and not grouping._observed
             for grouping in groupings
         ):
-            levels_list = [ping.result_index for ping in groupings]
+            levels_list = [ping.agg_index for ping in groupings]
             multi_index, _ = MultiIndex.from_product(
                 levels_list, names=[ping.name for ping in groupings]
             ).sortlevel()
@@ -3514,7 +3514,7 @@ class GroupBy(BaseGroupBy[NDFrameT]):
 
             agg_names = ["open", "high", "low", "close"]
             result = self.obj._constructor_expanddim(
-                res_values, index=self.grouper.result_index, columns=agg_names
+                res_values, index=self.grouper.agg_index, columns=agg_names
             )
             return self._reindex_output(result)
 
@@ -3835,18 +3835,18 @@ class GroupBy(BaseGroupBy[NDFrameT]):
     @final
     @Substitution(name="groupby")
     @Appender(_common_see_also)
-    def expanding(self, *args, **kwargs) -> ExpandingGroupby:
+    def expanding(self, *args, **kwargs) -> ExpandingGroupBy:
         """
         Return an expanding grouper, providing expanding
         functionality per group.
 
         Returns
         -------
-        pandas.api.typing.ExpandingGroupby
+        pandas.api.typing.ExpandingGroupBy
         """
-        from pandas.core.window import ExpandingGroupby
+        from pandas.core.window import ExpandingGroupBy
 
-        return ExpandingGroupby(
+        return ExpandingGroupBy(
             self._selected_obj,
             *args,
             _grouper=self.grouper,
@@ -5594,7 +5594,7 @@ class GroupBy(BaseGroupBy[NDFrameT]):
             output = output.drop(labels=list(g_names), axis=1)
 
         # Set a temp index and reindex (possibly expanding)
-        output = output.set_index(self.grouper.result_index).reindex(
+        output = output.set_index(self.grouper.agg_index).reindex(
             index, copy=False, fill_value=fill_value
         )
 
@@ -5782,8 +5782,8 @@ class GroupBy(BaseGroupBy[NDFrameT]):
             if len(self.grouper.groupings) == 1:
                 result_len = len(self.grouper.groupings[0].grouping_vector.unique())
             else:
-                # result_index only contains observed groups in this case
-                result_len = len(self.grouper.result_index)
+                # agg_index only contains observed groups in this case
+                result_len = len(self.grouper.agg_index)
             assert result_len <= expected_len
             has_unobserved = result_len < expected_len
 

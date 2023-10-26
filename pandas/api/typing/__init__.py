@@ -18,7 +18,7 @@ from pandas.core.resample import (
 )
 from pandas.core.window import (
     Expanding,
-    ExpandingGroupby,
+    ExpandingGroupBy,
     ExponentialMovingWindow,
     ExponentialMovingWindowGroupby,
     Rolling,
@@ -35,7 +35,7 @@ __all__ = [
     "DataFrameGroupBy",
     "DatetimeIndexResamplerGroupby",
     "Expanding",
-    "ExpandingGroupby",
+    "ExpandingGroupBy",
     "ExponentialMovingWindow",
     "ExponentialMovingWindowGroupby",
     "JsonReader",

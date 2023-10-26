@@ -634,7 +634,7 @@ class BaseGrouper:
     @cache_readonly
     def indices(self) -> dict[Hashable, npt.NDArray[np.intp]]:
         """dict {group name -> group indices}"""
-        if len(self.groupings) == 1 and isinstance(self.result_index, CategoricalIndex):
+        if len(self.groupings) == 1 and isinstance(self.agg_index, CategoricalIndex):
             # This shows unused categories in indices GH#38642
             return self.groupings[0].indices
         codes_list = [ping.codes for ping in self.groupings]
@@ -644,7 +644,7 @@ class BaseGrouper:
     @final
     def result_ilocs(self) -> npt.NDArray[np.intp]:
         """
-        Get the original integer locations of result_index in the input.
+        Get the original integer locations of agg_index in the input.
         """
         # Original indices are where group_index would go via sorting.
         # But when dropna is true, we need to remove null values while accounting for
@@ -692,7 +692,7 @@ class BaseGrouper:
             out = np.bincount(ids[ids != -1], minlength=ngroups)
         else:
             out = []
-        return Series(out, index=self.result_index, dtype="int64")
+        return Series(out, index=self.agg_index, dtype="int64")
 
     @cache_readonly
     def groups(self) -> dict[Hashable, np.ndarray]:
@@ -755,7 +755,7 @@ class BaseGrouper:
     @final
     @cache_readonly
     def ngroups(self) -> int:
-        return len(self.result_index)
+        return len(self.agg_index)
 
     @property
     def reconstructed_codes(self) -> list[npt.NDArray[np.intp]]:
@@ -764,12 +764,12 @@ class BaseGrouper:
         return decons_obs_group_ids(ids, obs_ids, self.shape, codes, xnull=True)
 
     @cache_readonly
-    def result_index(self) -> Index:
+    def agg_index(self) -> Index:
         if len(self.groupings) == 1:
-            return self.groupings[0].result_index.rename(self.names[0])
+            return self.groupings[0].agg_index.rename(self.names[0])
 
         codes = self.reconstructed_codes
-        levels = [ping.result_index for ping in self.groupings]
+        levels = [ping.agg_index for ping in self.groupings]
         return MultiIndex(
             levels=levels, codes=codes, verify_integrity=False, names=self.names
         )
@@ -1071,7 +1071,7 @@ class BinGrouper(BaseGrouper):
         return [np.r_[0, np.flatnonzero(self.bins[1:] != self.bins[:-1]) + 1]]
 
     @cache_readonly
-    def result_index(self) -> Index:
+    def agg_index(self) -> Index:
         if len(self.binlabels) != 0 and isna(self.binlabels[0]):
             return self.binlabels[1:]
 

@@ -591,7 +591,7 @@ class Grouping:
                 # error: Cannot determine type of "grouping_vector"  [has-type]
                 ng = newgrouper.groupings[0].grouping_vector  # type: ignore[has-type]
                 # use Index instead of ndarray so we can recover the name
-                grouping_vector = Index(ng, name=newgrouper.result_index.name)
+                grouping_vector = Index(ng, name=newgrouper.agg_index.name)
 
         elif not isinstance(
             grouping_vector, (Series, Index, ExtensionArray, np.ndarray)
@@ -651,7 +651,7 @@ class Grouping:
             return self._orig_grouper.name
 
         elif isinstance(self.grouping_vector, ops.BaseGrouper):
-            return self.grouping_vector.result_index.name
+            return self.grouping_vector.agg_index.name
 
         elif isinstance(self.grouping_vector, Index):
             return self.grouping_vector.name
@@ -694,12 +694,12 @@ class Grouping:
     @cache_readonly
     def group_arraylike(self) -> ArrayLike:
         """
-        Analogous to result_index, but holding an ArrayLike to ensure
+        Analogous to agg_index, but holding an ArrayLike to ensure
         we can retain ExtensionDtypes.
         """
         if self._all_grouper is not None:
             # retain dtype for categories, including unobserved ones
-            return self.result_index._values
+            return self.agg_index._values
 
         elif self._passed_categorical:
             return self.group_index._values
@@ -707,8 +707,8 @@ class Grouping:
         return self._codes_and_uniques[1]
 
     @cache_readonly
-    def result_index(self) -> Index:
-        # result_index retains dtype for categories, including unobserved ones,
+    def agg_index(self) -> Index:
+        # agg_index retains dtype for categories, including unobserved ones,
         #  which group_index does not
         if self._all_grouper is not None:
             group_idx = self.group_index
@@ -788,7 +788,7 @@ class Grouping:
         elif isinstance(self.grouping_vector, ops.BaseGrouper):
             # we have a list of groupers
             codes = self.grouping_vector.codes_info
-            uniques = self.grouping_vector.result_index._values
+            uniques = self.grouping_vecto.agg_index._values
         elif self._uniques is not None:
             # GH#50486 Code grouping_vector using _uniques; allows
             # including uniques that are not present in grouping_vector.

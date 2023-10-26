@@ -255,7 +255,7 @@ class TestApi(Base):
         "DataFrameGroupBy",
         "DatetimeIndexResamplerGroupby",
         "Expanding",
-        "ExpandingGroupby",
+        "ExpandingGroupBy",
         "ExponentialMovingWindow",
         "ExponentialMovingWindowGroupby",
         "JsonReader",

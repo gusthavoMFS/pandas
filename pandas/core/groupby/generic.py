@@ -281,7 +281,7 @@ class SeriesGroupBy(GroupBy[Series]):
                 return self.obj._constructor(
                     [],
                     name=self.obj.name,
-                    index=self.grouper.result_index,
+                    index=self.grouper.agg_index,
                     dtype=obj.dtype,
                 )
 
@@ -306,8 +306,8 @@ class SeriesGroupBy(GroupBy[Series]):
                     stacklevel=find_stack_level(),
                 )
 
-                # result is a dict whose keys are the elements of result_index
-                result = Series(result, index=self.grouper.result_index)
+                # result is a dict whose keys are the elements of agg_index
+                result = Series(result, index=self.grouper.agg_index)
                 result = self._wrap_aggregated_output(result)
                 return result
 
@@ -402,7 +402,7 @@ class SeriesGroupBy(GroupBy[Series]):
                 # GH#47787 see test_group_on_empty_multiindex
                 res_index = data.index
             else:
-                res_index = self.grouper.result_index
+                res_index = self.grouper.agg_index
 
             return self.obj._constructor(
                 [],
@@ -414,7 +414,7 @@ class SeriesGroupBy(GroupBy[Series]):
 
         if isinstance(values[0], dict):
             # GH #823 #24880
-            index = self.grouper.result_index
+            index = self.grouper.agg_index
             res_df = self.obj._constructor_expanddim(values, index=index)
             res_df = self._reindex_output(res_df)
             # if self.observed is False,
@@ -437,7 +437,7 @@ class SeriesGroupBy(GroupBy[Series]):
         else:
             # GH #6265 #24880
             result = self.obj._constructor(
-                data=values, index=self.grouper.result_index, name=self.obj.name
+                data=values, index=self.grouper.agg_index, name=self.obj.name
             )
             if not self.as_index:
                 result = self._insert_inaxis_grouper(result)
@@ -562,7 +562,7 @@ class SeriesGroupBy(GroupBy[Series]):
             from pandas.core.reshape.concat import concat
 
             concatenated = concat(results)
-            result = self._set_result_index_ordered(concatenated)
+            result = self._set_agg_index_ordered(concatenated)
         else:
             result = self.obj._constructor(dtype=np.float64)
 
@@ -706,7 +706,7 @@ class SeriesGroupBy(GroupBy[Series]):
                 res = out
         else:
             res = out[1:]
-        ri = self.grouper.result_index
+        ri = self.grouper.agg_index
 
         # we might have duplications among the bins
         if len(res) != len(ri):
@@ -1561,9 +1561,9 @@ class DataFrameGroupBy(GroupBy[DataFrame]):
             fres = func(grp_df, *args, **kwargs)
             result[name] = fres
 
-        result_index = self.grouper.result_index
+        agg_index = self.grouper.agg_index
         other_ax = obj.axes[1 - self.axis]
-        out = self.obj._constructor(result, index=other_ax, columns=result_index)
+        out = self.obj._constructor(result, index=other_ax, columns=agg_index)
         if self.axis == 0:
             out = out.T
 
@@ -1581,7 +1581,7 @@ class DataFrameGroupBy(GroupBy[DataFrame]):
                 # GH#47787 see test_group_on_empty_multiindex
                 res_index = data.index
             else:
-                res_index = self.grouper.result_index
+                res_index = self.grouper.agg_index
 
             result = self.obj._constructor(index=res_index, columns=data.columns)
             result = result.astype(data.dtypes, copy=False)
@@ -1601,7 +1601,7 @@ class DataFrameGroupBy(GroupBy[DataFrame]):
                 is_transform=is_transform,
             )
 
-        key_index = self.grouper.result_index if self.as_index else None
+        key_index = self.grouper.agg_index if self.as_index else None
 
         if isinstance(first_not_none, (np.ndarray, Index)):
             # GH#1738: values is list of arrays of unequal lengths
@@ -1767,7 +1767,7 @@ class DataFrameGroupBy(GroupBy[DataFrame]):
         other_axis = 1 if self.axis == 0 else 0  # switches between 0 & 1
         concatenated = concat(applied, axis=self.axis, verify_integrity=False)
         concatenated = concatenated.reindex(concat_index, axis=other_axis, copy=False)
-        return self._set_result_index_ordered(concatenated)
+        return self._set_agg_index_ordered(concatenated)
 
     __examples_dataframe_doc = dedent(
         """
@@ -2048,7 +2048,7 @@ class DataFrameGroupBy(GroupBy[DataFrame]):
 
         if not len(results):
             # concat would raise
-            res_df = DataFrame([], columns=columns, index=self.grouper.result_index)
+            res_df = DataFrame([], columns=columns, index=self.grouper.agg_index)
         else:
             res_df = concat(results, keys=columns, axis=1)
 
